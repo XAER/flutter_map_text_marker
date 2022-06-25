@@ -9,12 +9,14 @@ class TextMarkerPluginOptions extends LayerOptions {
   double mapWidth;
   double mapHeight;
   bool isActive;
+  Function(TextMarker newMarker) onAddMarker;
 
   TextMarkerPluginOptions({
     this.markers = const [],
     required this.mapHeight,
     required this.mapWidth,
     required this.isActive,
+    required this.onAddMarker,
   });
 }
 
@@ -37,7 +39,14 @@ class TextMarkerPlugin extends MapPlugin {
                 options: options,
               ));
             }
-            return Stack(children: textMarkers);
+            return TextMarkersOverlay(
+              height: options.mapHeight,
+              width: options.mapWidth,
+              isActive: options.isActive,
+              markers: textMarkers,
+              mapState: mapState,
+              onAddMarker: options.onAddMarker,
+            );
           });
     }
     throw Exception('Unkown options type for type CustomPlugin'
@@ -69,46 +78,142 @@ class TextMarkersOverlay extends StatefulWidget {
     required this.width,
     required this.isActive,
     required this.markers,
+    required this.mapState,
+    required this.onAddMarker,
   }) : super(key: key);
 
   double height;
   double width;
   bool isActive;
   List<Widget> markers;
+  MapState mapState;
+  Function(TextMarker newMarker) onAddMarker;
 
   @override
   State<TextMarkersOverlay> createState() => _TextMarkersOverlayState();
 }
 
 class _TextMarkersOverlayState extends State<TextMarkersOverlay> {
+  TextEditingController _markerTextController = TextEditingController();
+
+  @override
+  void dispose() {
+    _markerTextController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
-    if (widget.isActive) {
-      return Container(
-        decoration: BoxDecoration(
-          border: Border.all(color: Colors.red, width: 1),
-        ),
-        child: GestureDetector(
-          onLongPressEnd: (details) {},
-          child: Container(
-            height: widget.height,
-            width: widget.width,
-            color: Colors.black.withOpacity(0.5),
-            child: Stack(
-              children: widget.markers,
-            ),
-          ),
-        ),
-      );
-    }
     return Container(
-      height: widget.height,
-      width: widget.width,
-      color: Colors.transparent,
-      child: Stack(
-        children: widget.markers,
+      decoration: BoxDecoration(
+        border: Border.all(
+          color: widget.isActive ? Colors.red : Colors.transparent,
+          width: 1,
+        ),
+      ),
+      child: GestureDetector(
+        onLongPressEnd: (details) {
+          if (!widget.isActive) return;
+          print("Long Press at ${details.localPosition}");
+          LatLng markerPointPosition = _newMarkerCoords(details.localPosition);
+          // Show dialog to ask user the text to insert into the text marker
+          showDialog(
+              context: context,
+              builder: (context) {
+                return Dialog(
+                  backgroundColor: Colors.transparent,
+                  child: Container(
+                    height: 200,
+                    width: 300,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        children: [
+                          const Text(
+                            "Insert text for marker",
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 18.0),
+                            textAlign: TextAlign.center,
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(
+                                20.0, 0.0, 20.0, 20.0),
+                            child: TextField(
+                              controller: _markerTextController,
+                              decoration: const InputDecoration(
+                                border: UnderlineInputBorder(),
+                              ),
+                            ),
+                          ),
+                          SizedBox(
+                            width: MediaQuery.of(context).size.width * 0.4,
+                            child: ElevatedButton(
+                              style: ButtonStyle(
+                                backgroundColor:
+                                    MaterialStateProperty.all(Colors.blue),
+                              ),
+                              onPressed: () {
+                                // Here create and add the new marker to the list
+                                TextMarker newMarker = TextMarker(
+                                  point: markerPointPosition,
+                                  builder: (context) =>
+                                      Text(_markerTextController.text),
+                                );
+                                widget.onAddMarker(newMarker);
+                              },
+                              child: Text("Add"),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              });
+
+          print("Tapped coords: $markerPointPosition");
+        },
+        child: Container(
+          width: widget.width,
+          height: widget.height,
+          decoration: BoxDecoration(
+            color: widget.isActive
+                ? Colors.black.withOpacity(0.5)
+                : Colors.transparent,
+          ),
+          child: Stack(children: widget.markers),
+        ),
       ),
     );
+  }
+
+  static CustomPoint _offsetToPoint(Offset offset) {
+    return CustomPoint(offset.dx, offset.dy);
+  }
+
+  LatLng _newMarkerCoords(Offset offset) {
+    MapState? mapState = widget.mapState;
+
+    var renderObject = context.findRenderObject() as RenderBox;
+    var width = renderObject.size.width;
+    var height = renderObject.size.height;
+
+    var localPoint = _offsetToPoint(offset);
+
+    var localPointCenterDistance =
+        CustomPoint((width / 2) - localPoint.x, (height / 2) - localPoint.y);
+
+    if (mapState != null) {
+      var mapCenter = mapState.project(mapState.center);
+      var point = mapCenter - localPointCenterDistance;
+      return mapState.unproject(point);
+    }
+
+    return LatLng(0, 0);
   }
 }
 

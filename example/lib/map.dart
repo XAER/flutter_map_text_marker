@@ -15,6 +15,13 @@ class _MapPageState extends State<MapPage> {
 
   List<TextMarker> _markers = [];
 
+  void _addMarker(TextMarker newMarker) {
+    print("Adding marker: $newMarker");
+    setState(() {
+      _markers.add(newMarker);
+    });
+  }
+
   bool isTextMarkerActive = false;
 
   @override
@@ -26,13 +33,12 @@ class _MapPageState extends State<MapPage> {
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           setState(() {
-            print("YES");
             isTextMarkerActive = !isTextMarkerActive;
           });
         },
         child: const Icon(Icons.edit),
       ),
-      body: Container(
+      body: SizedBox(
         height: MediaQuery.of(context).size.height,
         width: MediaQuery.of(context).size.width,
         child: FlutterMap(
@@ -62,6 +68,7 @@ class _MapPageState extends State<MapPage> {
               mapHeight: MediaQuery.of(context).size.height,
               mapWidth: MediaQuery.of(context).size.width,
               markers: _markers,
+              onAddMarker: _addMarker,
             ),
           ],
         ),
