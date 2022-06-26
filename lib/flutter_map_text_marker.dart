@@ -114,7 +114,7 @@ class _TextMarkersOverlayState extends State<TextMarkersOverlay> {
       child: GestureDetector(
         onLongPressEnd: (details) {
           if (!widget.isActive) return;
-          print("Long Press at ${details.localPosition}");
+          // print("Long Press at ${details.localPosition}");
           LatLng markerPointPosition = _newMarkerCoords(details.localPosition);
           // Show dialog to ask user the text to insert into the text marker
           showDialog(
@@ -158,12 +158,15 @@ class _TextMarkersOverlayState extends State<TextMarkersOverlay> {
                               ),
                               onPressed: () {
                                 // Here create and add the new marker to the list
+                                final String newWidgetText =
+                                    _markerTextController.text;
                                 TextMarker newMarker = TextMarker(
                                   point: markerPointPosition,
-                                  builder: (context) =>
-                                      Text(_markerTextController.text),
+                                  builder: (context) => Text(newWidgetText),
                                 );
                                 widget.onAddMarker(newMarker);
+                                _markerTextController.clear();
+                                Navigator.of(context).pop();
                               },
                               child: Text("Add"),
                             ),
@@ -175,7 +178,7 @@ class _TextMarkersOverlayState extends State<TextMarkersOverlay> {
                 );
               });
 
-          print("Tapped coords: $markerPointPosition");
+          // print("Tapped coords: $markerPointPosition");
         },
         child: Container(
           width: widget.width,
@@ -250,18 +253,22 @@ class _TextMarkerWidgetState extends State<TextMarkerWidget> {
     TextMarker marker = widget.marker;
     updatePixelPos(widget.marker.point);
 
-    return GestureDetector(
-      onTap: () {
-        if (marker.onTap != null) {
-          marker.onTap!(marker.point);
-        }
-      },
-      onLongPress: () {
-        if (marker.onLongPress != null) {
-          marker.onLongPress!(marker.point);
-        }
-      },
-      child: marker.builder!(context),
+    return Positioned(
+      left: pixelPos.x.toDouble(),
+      top: pixelPos.y.toDouble(),
+      child: GestureDetector(
+        onTap: () {
+          if (marker.onTap != null) {
+            marker.onTap!(marker.point);
+          }
+        },
+        onLongPress: () {
+          if (marker.onLongPress != null) {
+            marker.onLongPress!(marker.point);
+          }
+        },
+        child: marker.builder!(context),
+      ),
     );
   }
 

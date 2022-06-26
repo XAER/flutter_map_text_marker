@@ -13,10 +13,10 @@ class MapPage extends StatefulWidget {
 class _MapPageState extends State<MapPage> {
   MapController? _mapController;
 
-  List<TextMarker> _markers = [];
+  final List<TextMarker> _markers = [];
 
   void _addMarker(TextMarker newMarker) {
-    print("Adding marker: $newMarker");
+    // print("Adding marker: $newMarker");
     setState(() {
       _markers.add(newMarker);
     });
@@ -26,6 +26,7 @@ class _MapPageState extends State<MapPage> {
 
   @override
   Widget build(BuildContext context) {
+    // print("Markers: $_markers");
     return Scaffold(
       appBar: AppBar(
         title: const Text("Text Marker"),
@@ -52,7 +53,7 @@ class _MapPageState extends State<MapPage> {
             allowPanningOnScrollingParent: false,
             onPositionChanged: null,
             slideOnBoundaries: false,
-            center: LatLng(41.84030035702692, 12.502828214145149),
+            center: LatLng(41.889306777663066, 12.491833350660679),
             zoom: 18.0,
             plugins: [
               TextMarkerPlugin(),
