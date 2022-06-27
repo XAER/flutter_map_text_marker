@@ -47,3 +47,6 @@ FlutterMap(
 ## Usage
 
 Check out the example folder in this project to find a flutter application running with this plugin. 
+
+To add a text marker to the map, activate the "Add Marker" layer by clicking on the Floating Action Button, and long press on the position on the map where you want to add the marker.
+You will be prompted to enter the text for the marker. Remember to exit the "Add Marker" layer by tapping on the Floating Action Button again.

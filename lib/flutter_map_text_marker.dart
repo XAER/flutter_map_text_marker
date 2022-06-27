@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_map/flutter_map.dart';
-import 'package:flutter_map/src/map/map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:flutter_map/plugin_api.dart';
 
@@ -82,19 +80,19 @@ class TextMarkersOverlay extends StatefulWidget {
     required this.onAddMarker,
   }) : super(key: key);
 
-  double height;
-  double width;
-  bool isActive;
-  List<Widget> markers;
-  MapState mapState;
-  Function(TextMarker newMarker) onAddMarker;
+  final double height;
+  final double width;
+  final bool isActive;
+  final List<Widget> markers;
+  final MapState mapState;
+  final Function(TextMarker newMarker) onAddMarker;
 
   @override
   State<TextMarkersOverlay> createState() => _TextMarkersOverlayState();
 }
 
 class _TextMarkersOverlayState extends State<TextMarkersOverlay> {
-  TextEditingController _markerTextController = TextEditingController();
+  final TextEditingController _markerTextController = TextEditingController();
 
   @override
   void dispose() {
@@ -168,7 +166,7 @@ class _TextMarkersOverlayState extends State<TextMarkersOverlay> {
                                 _markerTextController.clear();
                                 Navigator.of(context).pop();
                               },
-                              child: Text("Add"),
+                              child: const Text("Add"),
                             ),
                           ),
                         ],
@@ -210,13 +208,9 @@ class _TextMarkersOverlayState extends State<TextMarkersOverlay> {
     var localPointCenterDistance =
         CustomPoint((width / 2) - localPoint.x, (height / 2) - localPoint.y);
 
-    if (mapState != null) {
-      var mapCenter = mapState.project(mapState.center);
-      var point = mapCenter - localPointCenterDistance;
-      return mapState.unproject(point);
-    }
-
-    return LatLng(0, 0);
+    var mapCenter = mapState.project(mapState.center);
+    var point = mapCenter - localPointCenterDistance;
+    return mapState.unproject(point);
   }
 }
 
