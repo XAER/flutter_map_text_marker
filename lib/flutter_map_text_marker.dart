@@ -8,6 +8,7 @@ class TextMarkerPluginOptions extends LayerOptions {
   double mapHeight;
   bool isActive;
   Function(TextMarker newMarker) onAddMarker;
+  Function(LatLng point) onRemoveMarker;
 
   TextMarkerPluginOptions({
     this.markers = const [],
@@ -15,6 +16,7 @@ class TextMarkerPluginOptions extends LayerOptions {
     required this.mapWidth,
     required this.isActive,
     required this.onAddMarker,
+    required this.onRemoveMarker,
   });
 }
 
@@ -44,6 +46,7 @@ class TextMarkerPlugin extends MapPlugin {
               markers: textMarkers,
               mapState: mapState,
               onAddMarker: options.onAddMarker,
+              onRemoveMarker: options.onRemoveMarker,
             );
           });
     }
@@ -78,6 +81,7 @@ class TextMarkersOverlay extends StatefulWidget {
     required this.markers,
     required this.mapState,
     required this.onAddMarker,
+    required this.onRemoveMarker,
   }) : super(key: key);
 
   final double height;
@@ -86,6 +90,7 @@ class TextMarkersOverlay extends StatefulWidget {
   final List<Widget> markers;
   final MapState mapState;
   final Function(TextMarker newMarker) onAddMarker;
+  final Function(LatLng point) onRemoveMarker;
 
   @override
   State<TextMarkersOverlay> createState() => _TextMarkersOverlayState();
@@ -160,6 +165,68 @@ class _TextMarkersOverlayState extends State<TextMarkersOverlay> {
                                     _markerTextController.text;
                                 TextMarker newMarker = TextMarker(
                                   point: markerPointPosition,
+                                  onTap: (point) {
+                                    print("Marker at $point tapped");
+                                  },
+                                  onLongPress: (point) {
+                                    print("Marker at $point long pressed");
+                                    showDialog(
+                                      context: context,
+                                      builder: (context) => Dialog(
+                                        backgroundColor: Colors.transparent,
+                                        child: Container(
+                                          height: 200,
+                                          width: 300,
+                                          decoration: BoxDecoration(
+                                            color: Colors.white,
+                                            borderRadius:
+                                                BorderRadius.circular(10),
+                                          ),
+                                          child: Padding(
+                                            padding: const EdgeInsets.all(16.0),
+                                            child: Column(
+                                              children: [
+                                                const Text(
+                                                  "Delete marker?",
+                                                  style: TextStyle(
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: 18.0,
+                                                  ),
+                                                  textAlign: TextAlign.center,
+                                                ),
+                                                Padding(
+                                                    padding: const EdgeInsets
+                                                            .fromLTRB(
+                                                        20.0, 0.0, 20.0, 20.0),
+                                                    child: SizedBox(
+                                                      width:
+                                                          MediaQuery.of(context)
+                                                                  .size
+                                                                  .width *
+                                                              0.4,
+                                                      child: ElevatedButton(
+                                                        onPressed: () {
+                                                          widget.onRemoveMarker(
+                                                              point);
+                                                          Navigator.of(context)
+                                                              .pop();
+                                                        },
+                                                        style: ButtonStyle(
+                                                          backgroundColor:
+                                                              MaterialStateProperty
+                                                                  .all(Colors
+                                                                      .blue),
+                                                        ),
+                                                        child: Text("Delete"),
+                                                      ),
+                                                    )),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  },
                                   builder: (context) => Text(newWidgetText),
                                 );
                                 widget.onAddMarker(newMarker);

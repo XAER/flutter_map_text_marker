@@ -1,3 +1,8 @@
+## 0.0.2
+
+* Cleaned up the code.
+* Modified the plugin description inside the pubspec.yaml file.
+
 ## 0.0.1
 
 * The initial release of this package adds the base functionality to add multiple text markers to a map.

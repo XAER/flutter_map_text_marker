@@ -22,6 +22,13 @@ class _MapPageState extends State<MapPage> {
     });
   }
 
+  void _removeMarker(LatLng point) {
+    // print("Removing marker: $toDeleteMarker");
+    setState(() {
+      _markers.removeWhere((marker) => marker.point == point);
+    });
+  }
+
   bool isTextMarkerActive = false;
 
   @override
@@ -70,6 +77,7 @@ class _MapPageState extends State<MapPage> {
               mapWidth: MediaQuery.of(context).size.width,
               markers: _markers,
               onAddMarker: _addMarker,
+              onRemoveMarker: _removeMarker,
             ),
           ],
         ),
