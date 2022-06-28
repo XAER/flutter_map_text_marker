@@ -22,19 +22,79 @@ class _MapPageState extends State<MapPage> {
     });
   }
 
+  final TextEditingController _markerController = TextEditingController();
+
+  Widget getCustomAddMarkerDialog(LatLng point) {
+    return Dialog(
+        child: Container(
+      color: Colors.transparent,
+      height: 200,
+      width: 300,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          TextField(
+            controller: _markerController,
+            decoration: const InputDecoration(
+              labelText: "Marker text",
+            ),
+          ),
+          ElevatedButton(
+            child: const Text("Add"),
+            onPressed: () {
+              final String markerText = _markerController.text;
+              _addMarker(
+                TextMarker(
+                    point: point,
+                    text: markerText,
+                    builder: (context) => Text(markerText),
+                    onLongPress: (point) {
+                      _removeMarker(point);
+                    }),
+              );
+              Navigator.pop(context);
+            },
+          ),
+        ],
+      ),
+    ));
+  }
+
   void _removeMarker(LatLng point) {
     // print("Removing marker: $toDeleteMarker");
-    setState(() {
-      _markers.removeWhere((marker) => marker.point == point);
-    });
+    TextMarker deletingMarker =
+        _markers.firstWhere((marker) => marker.point == point);
+    ScaffoldMessenger.of(_scaffoldKey.currentContext!).showSnackBar(
+      SnackBar(
+        content: Text(
+          "Are you sure you want to remove this marker: ${deletingMarker.text}",
+          style: const TextStyle(
+            color: Colors.white,
+          ),
+        ),
+        backgroundColor: Colors.red,
+        action: SnackBarAction(
+          label: "Yes, delete",
+          textColor: Colors.white,
+          onPressed: () {
+            setState(() {
+              _markers.removeWhere((marker) => marker.point == point);
+            });
+          },
+        ),
+      ),
+    );
   }
 
   bool isTextMarkerActive = false;
+
+  final GlobalKey _scaffoldKey = GlobalKey();
 
   @override
   Widget build(BuildContext context) {
     // print("Markers: $_markers");
     return Scaffold(
+      key: _scaffoldKey,
       appBar: AppBar(
         title: const Text("Text Marker"),
       ),
@@ -78,6 +138,8 @@ class _MapPageState extends State<MapPage> {
               markers: _markers,
               onAddMarker: _addMarker,
               onRemoveMarker: _removeMarker,
+              customAddDialog: (LatLng point) =>
+                  getCustomAddMarkerDialog(point),
             ),
           ],
         ),

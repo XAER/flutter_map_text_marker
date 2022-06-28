@@ -1,3 +1,8 @@
+## 0.0.3
+
+* Added the ability to remove a `TextMarker`, with a confirmation SnackBar to the example project.
+* Added support for using a custom Widget for the dialog to show when adding a new item.
+
 ## 0.0.2
 
 * Cleaned up the code.

@@ -1,6 +1,6 @@
 name: flutter_map_text_marker
 description: A flutter_map MapPlugin that gives a user the ability to add custom text markers to the map.
-version: 0.0.2
+version: 0.0.3
 repository: https://github.com/XAER/flutter_map_text_marker
 
 environment:

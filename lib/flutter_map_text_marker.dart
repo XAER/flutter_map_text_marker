@@ -9,6 +9,7 @@ class TextMarkerPluginOptions extends LayerOptions {
   bool isActive;
   Function(TextMarker newMarker) onAddMarker;
   Function(LatLng point) onRemoveMarker;
+  Widget Function(LatLng point)? customAddDialog;
 
   TextMarkerPluginOptions({
     this.markers = const [],
@@ -17,6 +18,7 @@ class TextMarkerPluginOptions extends LayerOptions {
     required this.isActive,
     required this.onAddMarker,
     required this.onRemoveMarker,
+    this.customAddDialog,
   });
 }
 
@@ -47,6 +49,7 @@ class TextMarkerPlugin extends MapPlugin {
               mapState: mapState,
               onAddMarker: options.onAddMarker,
               onRemoveMarker: options.onRemoveMarker,
+              customAddDialog: options.customAddDialog,
             );
           });
     }
@@ -73,7 +76,7 @@ class TextMarkerPlugin extends MapPlugin {
 }
 
 class TextMarkersOverlay extends StatefulWidget {
-  TextMarkersOverlay({
+  const TextMarkersOverlay({
     Key? key,
     required this.height,
     required this.width,
@@ -82,6 +85,7 @@ class TextMarkersOverlay extends StatefulWidget {
     required this.mapState,
     required this.onAddMarker,
     required this.onRemoveMarker,
+    this.customAddDialog,
   }) : super(key: key);
 
   final double height;
@@ -91,6 +95,7 @@ class TextMarkersOverlay extends StatefulWidget {
   final MapState mapState;
   final Function(TextMarker newMarker) onAddMarker;
   final Function(LatLng point) onRemoveMarker;
+  final Widget Function(LatLng point)? customAddDialog;
 
   @override
   State<TextMarkersOverlay> createState() => _TextMarkersOverlayState();
@@ -120,127 +125,78 @@ class _TextMarkersOverlayState extends State<TextMarkersOverlay> {
           // print("Long Press at ${details.localPosition}");
           LatLng markerPointPosition = _newMarkerCoords(details.localPosition);
           // Show dialog to ask user the text to insert into the text marker
+
           showDialog(
               context: context,
               builder: (context) {
-                return Dialog(
-                  backgroundColor: Colors.transparent,
-                  child: Container(
-                    height: 200,
-                    width: 300,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        children: [
-                          const Text(
-                            "Insert text for marker",
-                            style: TextStyle(
-                                fontWeight: FontWeight.bold, fontSize: 18.0),
-                            textAlign: TextAlign.center,
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(
-                                20.0, 0.0, 20.0, 20.0),
-                            child: TextField(
-                              controller: _markerTextController,
-                              decoration: const InputDecoration(
-                                border: UnderlineInputBorder(),
+                if (widget.customAddDialog != null) {
+                  return widget.customAddDialog!(markerPointPosition);
+                } else {
+                  return Dialog(
+                    backgroundColor: Colors.transparent,
+                    child: Container(
+                      height: 200,
+                      width: 300,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          children: [
+                            const Text(
+                              "Insert text for marker",
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold, fontSize: 18.0),
+                              textAlign: TextAlign.center,
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(
+                                  20.0, 0.0, 20.0, 20.0),
+                              child: TextField(
+                                controller: _markerTextController,
+                                decoration: const InputDecoration(
+                                  border: UnderlineInputBorder(),
+                                ),
                               ),
                             ),
-                          ),
-                          SizedBox(
-                            width: MediaQuery.of(context).size.width * 0.4,
-                            child: ElevatedButton(
-                              style: ButtonStyle(
-                                backgroundColor:
-                                    MaterialStateProperty.all(Colors.blue),
+                            SizedBox(
+                              width: MediaQuery.of(context).size.width * 0.4,
+                              child: ElevatedButton(
+                                style: ButtonStyle(
+                                  backgroundColor:
+                                      MaterialStateProperty.all(Colors.blue),
+                                ),
+                                onPressed: () {
+                                  // Here create and add the new marker to the list
+                                  final String newWidgetText =
+                                      _markerTextController.text;
+                                  TextMarker newMarker = TextMarker(
+                                    point: markerPointPosition,
+                                    text: newWidgetText,
+                                    onTap: (point) {
+                                      // print("Marker at $point tapped");
+                                    },
+                                    onLongPress: (point) {
+                                      // print("Marker at $point removed");
+                                      widget.onRemoveMarker(point);
+                                    },
+                                    builder: (context) => Text(newWidgetText),
+                                  );
+                                  widget.onAddMarker(newMarker);
+                                  _markerTextController.clear();
+                                  Navigator.of(context).pop();
+                                },
+                                child: const Text("Add"),
                               ),
-                              onPressed: () {
-                                // Here create and add the new marker to the list
-                                final String newWidgetText =
-                                    _markerTextController.text;
-                                TextMarker newMarker = TextMarker(
-                                  point: markerPointPosition,
-                                  onTap: (point) {
-                                    print("Marker at $point tapped");
-                                  },
-                                  onLongPress: (point) {
-                                    print("Marker at $point long pressed");
-                                    showDialog(
-                                      context: context,
-                                      builder: (context) => Dialog(
-                                        backgroundColor: Colors.transparent,
-                                        child: Container(
-                                          height: 200,
-                                          width: 300,
-                                          decoration: BoxDecoration(
-                                            color: Colors.white,
-                                            borderRadius:
-                                                BorderRadius.circular(10),
-                                          ),
-                                          child: Padding(
-                                            padding: const EdgeInsets.all(16.0),
-                                            child: Column(
-                                              children: [
-                                                const Text(
-                                                  "Delete marker?",
-                                                  style: TextStyle(
-                                                    fontWeight: FontWeight.bold,
-                                                    fontSize: 18.0,
-                                                  ),
-                                                  textAlign: TextAlign.center,
-                                                ),
-                                                Padding(
-                                                    padding: const EdgeInsets
-                                                            .fromLTRB(
-                                                        20.0, 0.0, 20.0, 20.0),
-                                                    child: SizedBox(
-                                                      width:
-                                                          MediaQuery.of(context)
-                                                                  .size
-                                                                  .width *
-                                                              0.4,
-                                                      child: ElevatedButton(
-                                                        onPressed: () {
-                                                          widget.onRemoveMarker(
-                                                              point);
-                                                          Navigator.of(context)
-                                                              .pop();
-                                                        },
-                                                        style: ButtonStyle(
-                                                          backgroundColor:
-                                                              MaterialStateProperty
-                                                                  .all(Colors
-                                                                      .blue),
-                                                        ),
-                                                        child: Text("Delete"),
-                                                      ),
-                                                    )),
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                  builder: (context) => Text(newWidgetText),
-                                );
-                                widget.onAddMarker(newMarker);
-                                _markerTextController.clear();
-                                Navigator.of(context).pop();
-                              },
-                              child: const Text("Add"),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                );
+                  );
+                }
               });
 
           // print("Tapped coords: $markerPointPosition");
@@ -355,6 +311,7 @@ class _TextMarkerWidgetState extends State<TextMarkerWidget> {
 class TextMarker {
   LatLng point;
   final WidgetBuilder? builder;
+  final String text;
   final double width;
   final double height;
   final Offset offset;
@@ -362,15 +319,17 @@ class TextMarker {
   final Function(LatLng)? onLongPress;
   late Anchor anchor;
 
-  TextMarker(
-      {required this.point,
-      this.builder,
-      this.width = 30.0,
-      this.height = 30.0,
-      this.offset = const Offset(0.0, 0.0),
-      this.onTap,
-      this.onLongPress,
-      AnchorPos? anchorPos}) {
+  TextMarker({
+    required this.point,
+    required this.text,
+    this.builder,
+    this.width = 30.0,
+    this.height = 30.0,
+    this.offset = const Offset(0.0, 0.0),
+    this.onTap,
+    this.onLongPress,
+    AnchorPos? anchorPos,
+  }) {
     anchor = Anchor.forPos(anchorPos, width, height);
   }
 }
